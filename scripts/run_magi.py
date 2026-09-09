@@ -58,19 +58,21 @@ def claude(prompt, system, model, timeout=420):
            if k not in ("CLAUDECODE", "CLAUDE_CODE_CHILD_SESSION", "CLAUDE_CODE_SESSION_ID", "CLAUDE_CODE_ENTRYPOINT")}
     cmd = ["claude", "-p", prompt, "--output-format", "json", "--model", model,
            "--tools", "", "--system-prompt", system]
-    for attempt in range(3):
+    for attempt in range(6):
         try:
             p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=WORKDIR, env=env)
             data = json.loads(p.stdout.strip().splitlines()[-1]) if p.stdout.strip() else {}
             if data.get("is_error") or not data.get("result"):
-                raise RuntimeError(f"claude error: {p.stdout[:300]} {p.stderr[:300]}")
+                err = data.get("result") or data.get("error") or p.stderr[:800] or p.stdout[:800]
+                raise RuntimeError(f"claude error: {err}")
             with lock:
                 cost_total[0] += float(data.get("total_cost_usd") or 0)
             return data["result"]
         except Exception as e:  # noqa
-            log(f"  retry {attempt+1}: {str(e)[:200]}")
-            time.sleep(5 * (attempt + 1))
-    raise RuntimeError("claude failed 3 times")
+            wait = min(15 * 2 ** attempt, 300)
+            log(f"  retry {attempt+1} (wait {wait}s): {str(e)[:400]}")
+            time.sleep(wait)
+    raise RuntimeError("claude failed 6 times")
 
 
 def count(body):
