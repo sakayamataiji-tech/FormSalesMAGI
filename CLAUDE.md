@@ -50,11 +50,23 @@ FormSalesMAGI/
 │       ├── replier.md
 │       ├── closer.md
 │       └── judge.md
+├── scripts/
+│   ├── build_companies.py             ← 営業リスト → input/companies.csv 変換
+│   └── append_result.py               ← 最終文面を検証して output/results.csv に追記
 ├── input/
-│   └── companies.csv                  ← 会社名,部署,担当者,事業内容,課題仮説
+│   ├── target_list_raw.csv            ← 元の営業リスト（企業名/業界/規模/HP/フォームURL/送信可否）
+│   ├── companies.csv                  ← 会社名,部署,担当者,事業内容,課題仮説(+HP,フォームURL)
+│   └── sample_companies.csv           ← 動作確認用サンプル3社
 └── output/
     └── results.csv                    ← 実行時に生成・追記
 ```
+
+## 現在の設定（2026-09 時点）
+
+- **送信元（自社）: 株式会社Lei Hau'oli／商材: SES（フロントエンド特化の開発支援）**。プロフィールは SKILL.md §4。
+- **ターゲット: `input/target_list_raw.csv` の 2,115社**（Webアプリ・SaaS・ゲーム・医療機器・セキュリティ）。`scripts/build_companies.py` で「フォームあり & 営業禁止なし」の 1,406社を `companies.csv` に変換済み。
+- 元リストに部署名・担当者名が無いため、部署は業界から推定（開発部／技術部／情報システム部）、担当者は「ご担当者」（→「開発部 ご担当者様」）。事業内容・課題仮説は業界×規模のテンプレートから生成しているので、**HPを読める環境では起草前に事業内容・課題仮説を個社情報で上書きすると精度が上がる**。
+- パイロット3社（セーフィー／グラスホッパー・マニファクチュア／パロニム）は results.csv に記録済み。
 
 ## 親セッション（あなた）の動かし方
 
@@ -147,7 +159,11 @@ PY
 
 NG なら judge に「最終案が絶対条件 {A?} に違反しています。修正して VERDICT を出し直してください」と1回だけ再実行する。それでも NG なら `備考` に `絶対条件NG` と書いて記録し、人に報告する。
 
-OK なら `output/results.csv` に1行追記する。
+OK なら `output/results.csv` に1行追記する。追記は `scripts/append_result.py` に任せる（JSON を渡すと A1〜A3 を再検証し、CSV エスケープも処理する）。
+
+```bash
+python3 scripts/append_result.py /path/to/result.json
+```
 
 ### 6. 次の行へ
 
