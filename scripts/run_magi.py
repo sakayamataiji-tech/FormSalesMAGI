@@ -160,10 +160,21 @@ def process(idx, c, args):
     remands = 0
     transcript = []
     verdict = None
+    noverdict_retry = 0
     while True:
         jtxt = claude(judge_prompt(c, drafts), sys_prompts["judge"], args.judge_model)
         transcript.append(jtxt)
         verdict = parse_verdict(jtxt)
+        if not verdict["STATUS"] and noverdict_retry < 1:
+            # ツール呼び出しを試みる等で VERDICT が出なかった → 1回だけ出し直し
+            noverdict_retry += 1
+            log(f"{tag} VERDICTなし → 出し直し")
+            jtxt = claude(judge_prompt(c, drafts) +
+                          "\n\n【重要】この環境ではツール（Bash等）は一切呼び出せません。上記の機械計測値を採用し、"
+                          "判決文・最終文面・VERDICT ブロックをすべてテキストで一度に出力してください。",
+                          sys_prompts["judge"], args.judge_model)
+            transcript.append(jtxt)
+            verdict = parse_verdict(jtxt)
         if verdict["STATUS"].startswith("ADOPT"):
             ng = check(verdict["subject"], verdict["body"])
             fix = 0
