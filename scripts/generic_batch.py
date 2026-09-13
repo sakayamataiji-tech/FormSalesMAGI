@@ -43,7 +43,11 @@ COLS = ["処理日時", "会社名", "部署", "担当者", "件名", "本文", 
 
 def main():
     rows = list(csv.DictReader(open(COMPANIES, encoding="utf-8")))
-    target = rows[START:END]
+    results_path = ROOT / "output" / "results.csv"
+    already_personalized = set()
+    if results_path.exists():
+        already_personalized = {r["会社名"] for r in csv.DictReader(open(results_path, encoding="utf-8"))}
+    target = [r for r in rows[START:END] if r["会社名"] not in already_personalized]
     now = datetime.now(JST).isoformat(timespec="seconds")
     out = []
     for r in target:
