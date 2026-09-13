@@ -20,7 +20,7 @@ COMPANIES = ROOT / "input" / "companies.csv"
 DST = ROOT / "output" / "generic_results.csv"
 JST = timezone(timedelta(hours=9))
 
-START, END = 600, 1200  # 0-indexed: rows 601-1200 (1-indexed)
+START, END = 604, 1204  # 0-indexed: rows 605-1204 (1-indexed) — 604は前半パーソナライズが実際に到達した社数
 
 SUBJECT = "【1名から常駐】フロントエンド専任エンジニア40名、採用に頼らず体制強化"
 
